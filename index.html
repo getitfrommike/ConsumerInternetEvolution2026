@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ================= HEAD / SETUP ================= -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mexieon AI</title>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- ================= GLOBAL STYLES ================= -->
+<style>
+
+/* BASE FONT */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* HERO BACKGROUND */
+.hero-bg {
+  background: radial-gradient(circle at top, #0ea5e9, #020617);
+}
+
+/* GLASS EFFECT (PANELS / CARDS) */
+.glass {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* PRODUCT CARD HOVER */
+.card:hover {
+  transform: translateY(-5px);
+  transition: 0.25s ease;
+}
+
+/* IMAGE GRID ITEMS */
+.grid-img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* ACTIVE NAV MODE */
+.active-mode {
+  color: white;
+  font-weight: bold;
+  border-bottom: 2px solid white;
+}
+
+</style>
+</head>
+
+
+<!-- ================= BODY ================= -->
+<body class="bg-black text-white">
+
+
+<!-- ================= NAV BAR ================= -->
+<!-- Brand (left) + Mode Switch + Cart (right) -->
+<div class="p-6 flex justify-between items-center">
+
+  <!-- LOGO -->
+  <div class="text-xl font-bold">Mexieon</div>
+
+  <!-- RIGHT SIDE -->
+  <div class="flex items-center gap-6 text-sm">
+
+    <!-- MODE SWITCH (USER / SELLER / DEV) -->
+    <div class="flex gap-4 text-gray-300">
+      <span id="mode-user" onclick="setMode('user')" class="cursor-pointer active-mode">User</span>
+      <span id="mode-seller" onclick="setMode('seller')" class="cursor-pointer">Seller</span>
+      <span id="mode-dev" onclick="setMode('dev')" class="cursor-pointer">Dev</span>
+    </div>
+
+    <!-- CART DISPLAY -->
+    <div>Cart (<span id="cartCount">0</span>)</div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= HERO / SEARCH / INPUT ================= -->
+<div class="hero-bg min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
+
+  <!-- MAIN HEADLINE -->
+  <h1 class="text-4xl font-bold mb-6">
+    What do you want today?
+  </h1>
+
+  <!-- SEARCH PANEL -->
+  <div class="glass p-6 rounded-2xl w-full max-w-2xl">
+
+    <!-- USER INPUT -->
+    <input id="intentInput"
+      class="w-full p-4 rounded-xl text-black text-lg"
+      placeholder="Find me a handmade leather bag under $150" />
+
+    <!-- CONTROLS -->
+    <div class="flex justify-between mt-4">
+
+      <!-- AUTO MODE TOGGLE -->
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" id="autoMode">
+        Auto Mode
+      </label>
+
+      <!-- ACTION BUTTONS -->
+      <div class="flex gap-2">
+
+        <!-- VOICE INPUT -->
+        <button onclick="startVoice()" class="bg-blue-500 px-4 py-2 rounded-lg">
+          🎤
+        </button>
+
+        <!-- RUN AI -->
+        <button onclick="runAgent()" class="bg-white text-black px-5 py-2 rounded-xl">
+          Run
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- MEMORY DISPLAY -->
+    <div id="memory" class="mt-3 text-xs text-gray-300"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= IMAGE GRID (DISCOVERY SYSTEM) ================= -->
+<div class="max-w-7xl mx-auto px-4 -mt-10">
+
+  <div class="glass p-6 rounded-2xl">
+
+    <!-- GRID TITLE -->
+    <div class="flex justify-between mb-4 text-sm text-gray-300">
+      <span id="gridTitle">🔥 Trending Now</span>
+    </div>
+
+    <!-- IMAGE CONTAINER -->
+    <div id="imageGrid"
+      class="grid grid-cols-3 md:grid-cols-6 gap-4">
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= AI DECISION PANEL ================= -->
+<div class="max-w-4xl mx-auto px-4 mt-10">
+  <div id="decisionPanel" class="hidden glass p-6 rounded-2xl">
+
+    <h3 class="font-bold mb-4">🤖 Mexieon Recommendation</h3>
+
+    <!-- AI OUTPUT -->
+    <div id="decisionContent"></div>
+
+  </div>
+</div>
+
+
+<!-- ================= PRODUCT CARDS ================= -->
+<div class="max-w-6xl mx-auto px-4 mt-12">
+
+  <h2 class="text-gray-400 mb-4">
+    Or browse manually
+  </h2>
+
+  <!-- PRODUCTS CONTAINER -->
+  <div id="products"
+       class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  </div>
+
+</div>
+
+
+<!-- ================= BACK TO TOP ================= -->
+<div class="bg-gray-700 text-center py-3 text-sm cursor-pointer hover:bg-gray-600 mt-10">
+  <a href="#top">Back to top</a>
+</div>
+
+
+<!-- ================= FOOTER (DYNAMIC TEXT) ================= -->
+<footer class="bg-[#1f2937] text-gray-300 text-sm">
+
+  <!-- 🔥 THIS IS WHERE MODE-BASED TEXT GETS INJECTED -->
+  <div id="footerContent"
+       class="max-w-7xl mx-auto px-6 py-10 space-y-2">
+  </div>
+
+</footer>
+
+
+
+<!-- ================= SCRIPT / LOGIC ================= -->
+<script>
+
+/* ================= PRODUCT DATA ================= */
+const products = [
+  {id:1,name:"Handwoven Blanket",price:49},
+  {id:2,name:"Leather Bag",price:129},
+  {id:3,name:"Coffee Set",price:79},
+  {id:4,name:"Talavera Pottery",price:35}
+];
+
+/* CART + HISTORY + USER PROFILE */
+let cart = [];
+let history = [];
+let userProfile = { interests: [] };
+
+/* ================= RENDER PRODUCTS ================= */
+function renderProducts(){
+  const el = document.getElementById("products");
+  el.innerHTML = "";
+
+  products.forEach(p=>{
+    el.innerHTML += `
+      <div class="card glass p-5 rounded-xl">
+        <h3 class="font-semibold text-lg">${p.name}</h3>
+        <p>$${p.price}</p>
+        <button onclick="addToCart(${p.id})"
+          class="mt-3 bg-white text-black px-4 py-2 rounded-lg">
+          Add
+        </button>
+      </div>
+    `;
+  });
+}
+renderProducts();
+
+/* ================= CART SYSTEM ================= */
+function addToCart(id){
+  cart.push(products.find(p=>p.id===id));
+  document.getElementById("cartCount").innerText = cart.length;
+}
+
+
+/* ================= VOICE INPUT ================= */
+function startVoice(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+
+  recognition.onresult = function(e){
+    document.getElementById("intentInput").value =
+      e.results[0][0].transcript;
+  };
+
+  recognition.start();
+}
+
+/* ================= IMAGE SYSTEM ================= */
+
+/* IMAGE POOL */
+const imagePool = [
+  "images/bag1.jpg","images/bag2.jpg","images/electronics.jpg",
+  "images/electronics2.jpg","images/home.jpg","images/decor.jpg",
+  "images/books.jpg","images/shoes.jpg","images/jewelry.jpg",
+  "images/hat.jpg","images/rug.jpg","images/art.jpg"
+];
+
+/* RANDOMIZER */
+function getRandomImages(count=12){
+  return [...imagePool].sort(()=>0.5 - Math.random()).slice(0,count);
+}
+
+/* GRID RENDER */
+function renderGrid(images, title="🔥 Trending Now"){
+  const grid = document.getElementById("imageGrid");
+  const label = document.getElementById("gridTitle");
+
+  label.innerText = title;
+  grid.innerHTML = "";
+
+  images.forEach(src=>{
+    grid.innerHTML += `
+      <img src="${src}" class="grid-img"
+        onclick="handleImageClick('${src}')">
+    `;
+  });
+}
+
+
+/* ================= USER LEARNING ================= */
+function handleImageClick(src){
+  if(src.includes("bag")) userProfile.interests.push("leather");
+  if(src.includes("coffee")) userProfile.interests.push("food");
+  if(src.includes("pottery")) userProfile.interests.push("home");
+}
+
+
+/* ================= ROTATION ENGINE ================= */
+function rotateImages(){
+
+  if(userProfile.interests.length === 0){
+    renderGrid(getRandomImages());
+  } else {
+
+    const last = userProfile.interests.slice(-1)[0];
+
+    const filtered = imagePool.filter(img =>
+      img.includes(
+        last === "leather" ? "bag" :
+        last === "food" ? "coffee" :
+        last === "home" ? "pottery" : ""
+      )
+    );
+
+    renderGrid(
+      filtered.length ? filtered : getRandomImages(),
+      "🧠 Recommended For You"
+    );
+  }
+
+}
+
+
+/* ================= INIT ================= */
+renderGrid(getRandomImages());
+
+
+/* ================= AUTO REFRESH ================= */
+setInterval(rotateImages, 120000);
+
+
+/* ================= AI SYSTEM ================= */
+async function runAgent(){
+
+  const input = document.getElementById("intentInput").value;
+  const panel = document.getElementById("decisionPanel");
+  const content = document.getElementById("decisionContent");
+
+  if(!input) return;
+
+  history.push(input);
+
+  document.getElementById("memory").innerText =
+    "Recent: " + history.slice(-3).join(" • ");
+
+  panel.classList.remove("hidden");
+  content.innerHTML = `<div class="pulse">🤖 Thinking...</div>`;
+
+  try {
+
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer YOUR_API_KEY"
+      },
+      body: JSON.stringify({
+        model:"gpt-4o-mini",
+        messages:[
+          {role:"system",content:"You are a shopping assistant."},
+          {role:"user",content:input}
+        ]
+      })
+    });
+
+    const data = await res.json();
+    const reply = data.choices[0].message.content;
+
+    content.innerHTML = `<div>${reply}</div>`;
+
+  } catch(err){
+    content.innerHTML = "Error connecting to AI.";
+  }
+
+}
+
+
+
+/* ================= MODE SYSTEM ================= */
+/* Controls nav highlight + footer switching */
+
+let currentMode = "user";
+
+function setMode(mode){
+
+  currentMode = mode;
+
+  // REMOVE ACTIVE STATE
+  document.getElementById("mode-user").classList.remove("active-mode");
+  document.getElementById("mode-seller").classList.remove("active-mode");
+  document.getElementById("mode-dev").classList.remove("active-mode");
+
+  // ADD ACTIVE STATE
+  document.getElementById("mode-" + mode).classList.add("active-mode");
+
+  // UPDATE FOOTER
+  renderFooter();
+}
+
+
+/* ================= FOOTER CONTENT ================= */
+/* 🔥 ONLY EDIT THIS SECTION TO CHANGE FOOTER TEXT */
+
+function renderFooter(){
+
+  const el = document.getElementById("footerContent");
+
+  if(currentMode === "user"){
+    el.innerHTML = `
+      Mexieon<br>
+      About Mexieon<br>
+      How AI Shopping Works<br>
+      Customer Internet 2027<br><br>
+
+      Make Money<br>
+      Sell on Mexieon<br>
+      Affiliate Program<br><br>
+
+      Payments<br>
+      Wallet<br>
+      Gift Cards<br><br>
+
+      Help<br>
+      Account<br>
+      Orders<br>
+      Returns
+    `;
+  }
+
+  if(currentMode === "seller"){
+    el.innerHTML = `
+      Seller<br>
+      Dashboard<br>
+      Inventory<br>
+      Analytics<br><br>
+
+      Growth<br>
+      Ads<br>
+      Promotions
+    `;
+  }
+
+  if(currentMode === "dev"){
+    el.innerHTML = `
+      Developer<br>
+      API Docs<br>
+      Agent API<br>
+      SDKs<br><br>
+
+      Build<br>
+      Create Agent<br>
+      Sandbox<br><br>
+
+      Manage<br>
+      API Keys<br>
+      Usage
+    `;
+  }
+
+}
+
+
+// ⭐ ADD THIS LINE - Initialize footer on page load
+renderFooter();
+
+
+
+
+
+</script>
+
+</body>
+</html>
