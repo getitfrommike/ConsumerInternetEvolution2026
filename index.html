@@ -408,58 +408,77 @@ function renderFooter(){
 
   const el = document.getElementById("footerContent");
 
+  // base layout (horizontal)
+  el.className = "max-w-7xl mx-auto px-6 py-10 flex flex-wrap gap-8 justify-center text-center";
   if(currentMode === "user"){
     el.innerHTML = `
-      Mexieon<br>
-      About Mexieon<br>
-      How AI Shopping Works<br>
-      Customer Internet 2027<br><br>
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Mexieon</span>
+        <span>About Mexieon</span>
+        <span>How AI Shopping Works</span>
+        <span>Customer Internet 2027</span>
+      </div>
 
-      Make Money<br>
-      Sell on Mexieon<br>
-      Affiliate Program<br><br>
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Make Money</span>
+        <span>Sell on Mexieon</span>
+        <span>Affiliate Program</span>
+      </div>
 
-      Payments<br>
-      Wallet<br>
-      Gift Cards<br><br>
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Payments</span>
+        <span>Wallet</span>
+        <span>Gift Cards</span>
+      </div>
 
-      Help<br>
-      Account<br>
-      Orders<br>
-      Returns
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Help</span>
+        <span>Account</span>
+        <span>Orders</span>
+        <span>Returns</span>
+      </div>
     `;
   }
 
   if(currentMode === "seller"){
     el.innerHTML = `
-      Seller<br>
-      Dashboard<br>
-      Inventory<br>
-      Analytics<br><br>
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Seller</span>
+        <span>Dashboard</span>
+        <span>Inventory</span>
+        <span>Analytics</span>
+      </div>
 
-      Growth<br>
-      Ads<br>
-      Promotions
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Growth</span>
+        <span>Ads</span>
+        <span>Promotions</span>
+      </div>
     `;
   }
 
   if(currentMode === "dev"){
     el.innerHTML = `
-      Developer<br>
-      API Docs<br>
-      Agent API<br>
-      SDKs<br><br>
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Developer</span>
+        <span>API Docs</span>
+        <span>Agent API</span>
+        <span>SDKs</span>
+      </div>
 
-      Build<br>
-      Create Agent<br>
-      Sandbox<br><br>
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Build</span>
+        <span>Create Agent</span>
+        <span>Sandbox</span>
+      </div>
 
-      Manage<br>
-      API Keys<br>
-      Usage
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">Manage</span>
+        <span>API Keys</span>
+        <span>Usage</span>
+      </div>
     `;
   }
-
 }
 
 
